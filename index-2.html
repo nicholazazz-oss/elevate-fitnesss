@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ELEVATE FITNESS — Sistem Informasi Manajemen Gym</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f5f7;color:#17202a}
+header{background:#111827;color:#fff;padding:16px 5%;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:3}
+.logo{font-size:22px;font-weight:800}.logo b{color:#22c55e}button{border:0;border-radius:9px;padding:10px 14px;cursor:pointer;font-weight:700}
+nav button{background:transparent;color:#d1d5db}nav button.active,nav button:hover{background:#1f2937;color:#fff}
+.wrap{max-width:1150px;margin:auto;padding:28px 5%}.hero{background:linear-gradient(135deg,#111827,#263342);color:white;border-radius:18px;padding:26px;margin-bottom:22px}
+.hero h1{margin:0 0 8px}.muted{color:#64748b;font-size:13px}.hero .muted{color:#cbd5e1}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:18px;box-shadow:0 5px 20px #00000008}.num{font-size:30px;font-weight:800;margin:7px 0}
+.section{display:none}.section.show{display:block}.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin:20px 0}.primary{background:#22c55e;color:#fff}.danger{background:#ef4444;color:#fff}.secondary{background:#e5e7eb}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}th,td{text-align:left;padding:13px;border-bottom:1px solid #e5e7eb;font-size:14px}th{background:#f8fafc}
+.badge{padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700}.active{background:#dcfce7;color:#166534}.expired{background:#fee2e2;color:#991b1b}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:13px}.form input,.form select{width:100%;padding:11px;border:1px solid #d1d5db;border-radius:8px}.full{grid-column:1/-1}
+.modal{display:none;position:fixed;inset:0;background:#0008;align-items:center;justify-content:center;z-index:9}.modal.show{display:flex}.modalbox{background:white;border-radius:16px;padding:22px;width:min(500px,92%)}.right{text-align:right;margin-top:15px}
+.login{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#111827,#172033)}.loginbox{width:min(410px,92%);background:#fff;padding:28px;border-radius:18px}.loginbox input{width:100%;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:8px}
+.memberbox{max-width:650px;margin:20px auto}.info{display:grid;grid-template-columns:1fr 1fr;gap:12px}.info div{background:#f8fafc;padding:14px;border-radius:10px}
+@media(max-width:800px){.cards{grid-template-columns:1fr 1fr}.form,.info{grid-template-columns:1fr}nav{display:none}}
+</style>
+</head>
+<body>
+<div id="login" class="login">
+ <div class="loginbox">
+  <h1>ELEVATE <span style="color:#22c55e">FITNESS</span></h1><p class="muted">Sistem Informasi Manajemen Gym</p>
+  <input id="username" placeholder="Username" value="admin">
+  <input id="password" type="password" placeholder="Password" value="admin123">
+  <select id="role" style="width:100%;padding:12px;border-radius:8px;margin:7px 0;border:1px solid #ddd">
+   <option value="admin">Admin / Pengelola</option><option value="member">Member</option>
+  </select>
+  <button class="primary" style="width:100%;margin-top:8px" onclick="login()">Masuk</button>
+  <p class="muted">Demo: admin/admin123 atau member/member123</p>
+ </div>
+</div>
+
+<div id="app" style="display:none">
+<header><div class="logo">ELEVATE <b>FITNESS</b></div><nav id="nav"></nav><button class="secondary" onclick="logout()">Keluar</button></header>
+<main class="wrap">
+<section id="adminHome" class="section">
+ <div class="hero"><h1>Dashboard Admin</h1><p class="muted">Kelola anggota, membership, pembayaran, dan laporan gym.</p></div>
+ <div class="cards">
+  <div class="card"><div class="muted">Total Anggota</div><div class="num" id="total">0</div></div>
+  <div class="card"><div class="muted">Membership Aktif</div><div class="num" id="aktif">0</div></div>
+  <div class="card"><div class="muted">Expired</div><div class="num" id="expired">0</div></div>
+  <div class="card"><div class="muted">Pembayaran Lunas</div><div class="num" id="lunas">0</div></div>
+ </div>
+</section>
+
+<section id="members" class="section">
+ <div class="toolbar"><div><h2>Data Anggota</h2><span class="muted">Kelola seluruh member gym.</span></div><button class="primary" onclick="openModal()">+ Tambah Anggota</button></div>
+ <table><thead><tr><th>Nama</th><th>Telepon</th><th>Paket</th><th>Status</th><th>Pembayaran</th><th>Aksi</th></tr></thead><tbody id="tbody"></tbody></table>
+</section>
+
+<section id="payments" class="section">
+ <div class="hero"><h2>Data Pembayaran</h2><p class="muted">Admin dapat mencatat dan memverifikasi pembayaran member.</p></div>
+ <table><thead><tr><th>Nama</th><th>Paket</th><th>Nominal</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="paybody"></tbody></table>
+</section>
+
+<section id="reports" class="section">
+ <div class="hero"><h2>Laporan Keanggotaan</h2><p class="muted">Ringkasan data untuk membantu pengelola mengambil keputusan.</p></div>
+ <div class="cards"><div class="card"><div class="muted">Anggota Aktif</div><div class="num" id="raktif">0</div></div><div class="card"><div class="muted">Anggota Expired</div><div class="num" id="rexpired">0</div></div><div class="card"><div class="muted">Pembayaran Lunas</div><div class="num" id="rlunas">0</div></div><div class="card"><div class="muted">Pendapatan Tercatat</div><div class="num" id="revenue">Rp0</div></div></div>
+</section>
+
+<section id="memberHome" class="section">
+ <div class="hero"><h1>Dashboard Member</h1><p class="muted">Informasi membership pribadi Anda.</p></div>
+ <div class="card memberbox">
+  <div class="info">
+   <div><span class="muted">Nama</span><strong id="mname" style="display:block;margin-top:5px"></strong></div>
+   <div><span class="muted">Paket</span><strong id="mpaket" style="display:block;margin-top:5px"></strong></div>
+   <div><span class="muted">Status</span><strong id="mstatus" style="display:block;margin-top:5px"></strong></div>
+   <div><span class="muted">Berlaku Sampai</span><strong id="mexpiry" style="display:block;margin-top:5px"></strong></div>
+   <div><span class="muted">Pembayaran</span><strong id="mpay" style="display:block;margin-top:5px"></strong></div>
+   <div><span class="muted">Nominal</span><strong id="mamount" style="display:block;margin-top:5px"></strong></div>
+  </div>
+ </div>
+</section>
+</main></div>
+
+<div id="modal" class="modal"><div class="modalbox"><h2>Tambah Anggota</h2>
+<div class="form">
+<input id="nname" placeholder="Nama lengkap"><input id="nphone" placeholder="Nomor telepon">
+<select id="npackage"><option>1 Bulan — Rp150.000</option><option>3 Bulan — Rp400.000</option><option>6 Bulan — Rp700.000</option></select>
+<input id="nexpiry" type="date">
+<select id="npay"><option>Lunas</option><option>Belum Lunas</option></select>
+</div><div class="right"><button class="secondary" onclick="closeModal()">Batal</button> <button class="primary" onclick="addMember()">Simpan</button></div>
+</div></div>
+
+<script>
+let members=[
+{name:"Andi Pratama",phone:"081234567890",pack:"1 Bulan — Rp150.000",expiry:"2026-10-27",pay:"Lunas"},
+{name:"Budi Santoso",phone:"082233445566",pack:"3 Bulan — Rp400.000",expiry:"2026-12-20",pay:"Lunas"},
+{name:"Citra Lestari",phone:"083344556677",pack:"1 Bulan — Rp150.000",expiry:"2026-09-10",pay:"Belum Lunas"}
+];
+let role="";
+function login(){
+ let r=document.getElementById("role").value, u=document.getElementById("username").value,p=document.getElementById("password").value;
+ if((r==="admin"&&u==="admin"&&p==="admin123")||(r==="member"&&u==="member"&&p==="member123")){
+  role=r;document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";buildNav();refresh();
+ }else alert("Login demo salah. Admin: admin/admin123 | Member: member/member123");
+}
+function logout(){location.reload()}
+function buildNav(){
+  let n=document.getElementById("nav");
+  n.innerHTML=role==="admin"
+    ? '<button onclick="show(\'adminHome\')">Dashboard</button><button onclick="show(\'members\')">Anggota</button><button onclick="show(\'payments\')">Pembayaran</button><button onclick="show(\'reports\')">Laporan</button>'
+    : '<button onclick="show(\'memberHome\')">Dashboard Saya</button>';
+  show(role==="admin"?"adminHome":"memberHome");
+}
+function show(id){document.querySelectorAll(".section").forEach(x=>x.classList.remove("show"));document.getElementById(id).classList.add("show")}
+function refresh(){
+ let active=members.filter(x=>new Date(x.expiry)>=new Date()).length, expired=members.length-active, paid=members.filter(x=>x.pay==="Lunas").length;
+ document.getElementById("total").textContent=members.length;document.getElementById("aktif").textContent=active;document.getElementById("expired").textContent=expired;document.getElementById("lunas").textContent=paid;
+ document.getElementById("raktif").textContent=active;document.getElementById("rexpired").textContent=expired;document.getElementById("rlunas").textContent=paid;
+ let rev=members.filter(x=>x.pay==="Lunas").reduce((s,x)=>s+(x.pack.includes("150")?150000:x.pack.includes("400")?400000:700000),0);document.getElementById("revenue").textContent="Rp"+rev.toLocaleString("id-ID");
+ document.getElementById("tbody").innerHTML=members.map((x,i)=>`<tr><td><b>${x.name}</b></td><td>${x.phone}</td><td>${x.pack}</td><td><span class="badge ${new Date(x.expiry)>=new Date()?"active":"expired"}">${new Date(x.expiry)>=new Date()?"Aktif":"Expired"}</span></td><td>${x.pay}</td><td><button class="danger" onclick="del(${i})">Hapus</button></td></tr>`).join("");
+ document.getElementById("paybody").innerHTML=members.map((x,i)=>`<tr><td>${x.name}</td><td>${x.pack.split(" — ")[0]}</td><td>${x.pack.split(" — ")[1]}</td><td>${x.pay}</td><td>${x.pay!=="Lunas"?`<button class="primary" onclick="pay(${i})">Verifikasi</button>`:"—"}</td></tr>`).join("");
+ if(role==="member"){let x=members[0];document.getElementById("mname").textContent=x.name;document.getElementById("mpaket").textContent=x.pack;document.getElementById("mstatus").textContent=new Date(x.expiry)>=new Date()?"Aktif":"Expired";document.getElementById("mexpiry").textContent=x.expiry;document.getElementById("mpay").textContent=x.pay;document.getElementById("mamount").textContent=x.pack.split(" — ")[1]}
+}
+function openModal(){document.getElementById("modal").classList.add("show")}
+function closeModal(){document.getElementById("modal").classList.remove("show")}
+function addMember(){let name=document.getElementById("nname").value.trim(),phone=document.getElementById("nphone").value.trim(),pack=document.getElementById("npackage").value,expiry=document.getElementById("nexpiry").value,pay=document.getElementById("npay").value;if(!name||!expiry)return alert("Lengkapi nama dan tanggal berlaku.");members.push({name,phone,pack,expiry,pay});closeModal();refresh()}
+function del(i){if(confirm("Hapus anggota ini?")){members.splice(i,1);refresh()}}
+function pay(i){members[i].pay="Lunas";refresh()}
+</script>
+</body></html>
