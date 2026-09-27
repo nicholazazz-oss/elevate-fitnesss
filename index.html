@@ -88,17 +88,44 @@ table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;ove
 </div></div>
 
 <script>
-let members=[
-{name:"Andi Pratama",phone:"081234567890",pack:"1 Bulan — Rp150.000",expiry:"2026-10-27",pay:"Lunas"},
-{name:"Budi Santoso",phone:"082233445566",pack:"3 Bulan — Rp400.000",expiry:"2026-12-20",pay:"Lunas"},
-{name:"Citra Lestari",phone:"083344556677",pack:"1 Bulan — Rp150.000",expiry:"2026-09-10",pay:"Belum Lunas"}
-];
-let role="";
-function login(){
- let r=document.getElementById("role").value, u=document.getElementById("username").value,p=document.getElementById("password").value;
- if((r==="admin"&&u==="admin"&&p==="admin123")||(r==="member"&&u==="member"&&p==="member123")){
-  role=r;document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";buildNav();refresh();
- }else alert("Login demo salah. Admin: admin/admin123 | Member: member/member123");
+const SUPABASE_URL="https://zvrtibgtmhbnpunamqrg.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_W4-_lDVhG6qF8Hax9O2nFw_-YqloQ_P;
+
+const supabaseClient=supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+ async function login(){
+  const email=document.getElementById("username").value.trim();
+  const password=document.getElementById("password").value;
+
+  const {data,error}=await supabaseClient.auth.signInWithPassword({
+    email:email,
+    password:password
+  });
+
+  if(error){
+    alert("Login gagal: "+error.message);
+    return;
+  }
+
+  const {data:adminRow,error:adminError}=await supabaseClient
+    .from("admins")
+    .select("user_id")
+    .eq("user_id",data.user.id)
+    .maybeSingle();
+
+  if(adminError || !adminRow){
+    await supabaseClient.auth.signOut();
+    alert("Akun ini bukan admin.");
+    return;
+  }
+
+  role="admin";
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  buildNav();
+  show("adminHome");
 }
 function logout(){location.reload()}
 function buildNav(){
